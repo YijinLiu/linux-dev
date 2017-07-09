@@ -6,8 +6,8 @@ YELLOW='\e[0;33m'
 NC='\e[0m'
 
 install_pkgs() {
-    sudo apt install -y build-essential clang cmake cpio curl graphviz python-dev python-nose-cov \
-        python-nose-yanc python-pip python-scipy python-wheel wget &&
+    sudo apt install -y build-essential clang cmake cpio curl graphviz locate python-dev \
+        python-nose-cov python-nose-yanc python-pip python-scipy python-wheel wget &&
     sudo pip install --upgrade pip &&
     sudo pip install graphviz
     rc=$?
@@ -32,7 +32,7 @@ install_mkl() {
     echo '
 ACCEPT_EULA=accept
 CONTINUE_WITH_OPTIONAL_ERROR=yes
-PSET_INSTALL_DIR=/usr/local/mkl
+PSET_INSTALL_DIR=/usr/local/intel
 CONTINUE_WITH_INSTALLDIR_OVERWRITE=yes
 COMPONENTS=DEFAULTS
 PSET_MODE=install
@@ -59,7 +59,7 @@ install_ipp() {
     echo '
 ACCEPT_EULA=accept
 CONTINUE_WITH_OPTIONAL_ERROR=yes
-PSET_INSTALL_DIR=/usr/local/ipp
+PSET_INSTALL_DIR=/usr/local/intel
 CONTINUE_WITH_INSTALLDIR_OVERWRITE=yes
 COMPONENTS=DEFAULTS
 PSET_MODE=install
@@ -83,7 +83,7 @@ install_daal() {
     fi
     cd daal
     make _daal _release_c _release_p PLAT=lnx32e COMPILER=gnu &&
-    sudo cp -av __release_lnx_gnu /usr/local/daal
+    sudo cp -av __release_lnx_gnu /usr/local/intel/daal
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to compile Intel DAAL!${NC}"
@@ -102,7 +102,7 @@ install_mkl_dnn() {
     cd mkl-dnn
     mkdir -p build
     cd build
-    cmake -DCMAKE_INSTALL_PREFIX=/usr/local/mkl-dnn .. && make && sudo make install
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local/intel/mkl-dnn .. && make && sudo make install
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to compile Intel MKL-DNN!${NC}"
@@ -174,12 +174,26 @@ install_computecpp() {
         echo -e "${RED}Failed to download ComputeCpp!${NC}"
         return 1
     fi
-    tar xvzf ComputeCpp-CE-0.2.1-Ubuntu.16.04-64bit.tar.gz -C /usr/local
+    sudo tar xvzf ComputeCpp-CE-0.2.1-Ubuntu.16.04-64bit.tar.gz -C /usr/local
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to install ComputeCpp!${NC}"
         return 1
     fi
+}
+
+install_headers() {
+    src=$1
+    dst=$2
+	for header in $(find $src -name "*.h") ; do
+        dir=$(dir $header)
+        sudo mkdir -p $dst/$dir && sudo cp $header $dst/$dir
+        rc=$?
+        if [ $rc != 0 ]; then
+            echo -e "${RED}Failed to install $header!${NC}"
+            return 1
+        fi
+    done
 }
 
 install_tensorflow_src() {
@@ -196,7 +210,7 @@ install_tensorflow_src() {
 /usr/local/lib/python2.7/dist-packages
 y
 n
-/usr/local/mkl
+/usr/local/intel/mkl
 -march=native
 y
 y
@@ -214,7 +228,6 @@ n
         echo -e "${RED}Failed to configure Tensorflow!${NC}"
         return 1
     fi
-    cd ..
     # TODO: After https://github.com/bazelbuild/bazel/issues/1920 is fixed, build static c/c++
     # libraries.
     bazel build --config=opt //tensorflow/tools/pip_package:build_pip_package \
@@ -225,9 +238,10 @@ n
         echo -e "${RED}Failed to build Tensorflow!${NC}"
         return 1
     fi
+    sudo mkdir -p /usr/local/lib &&
     sudo install bazel-bin/tensorflow/libtensorflow.so bazel-bin/tensorflow/libtensorflow_cc.so \
         /usr/local/lib &&
-    sudo cp -av tensorflow /usr/local/include/ &&
+    install_headers tensorflow /usr/local/include &&
     sudo pip install /tmp/tensorflow_pkg/tensorflow-1.2.1-cp27-cp27mu-linux_x86_64.whl
     rc=$?
     if [ $rc != 0 ]; then
@@ -255,54 +269,34 @@ install_mxnet_src() {
         return 1
     fi
     cd mxnet
-    echo "
-diff --git a/Makefile b/Makefile
+	echo "diff --git a/Makefile b/Makefile
 index c71cb13..7b70127 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -94,7 +94,7 @@ ifeq ($(USE_MKL2017), 1)
- 	CFLAGS += -DUSE_MKL=1
- 	CFLAGS += -I$(ROOTDIR)/src/operator/mkl/
- 	CFLAGS += -I$(MKLML_ROOT)/include
--	LDFLAGS += -L$(MKLML_ROOT)/lib
-+	LDFLAGS += -L$(MKLML_ROOT)/lib/intel64
- ifeq ($(USE_MKL2017_EXPERIMENTAL), 1)
- 	CFLAGS += -DMKL_EXPERIMENTAL=1
- else
-diff --git a/mshadow/make/mshadow.mk b/mshadow/make/mshadow.mk
-index 0ff2fbd..931a9e1 100644
---- a/mshadow/make/mshadow.mk
-+++ b/mshadow/make/mshadow.mk
-@@ -52,10 +52,10 @@ ifeq ($(USE_INTEL_PATH), NONE)
- else
- 	MKLROOT = $(USE_INTEL_PATH)/mkl
- endif
--	MSHADOW_LDFLAGS += -L${MKLROOT}/../compiler/lib/intel64 -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_intel_thread.a -Wl,
---end-group -liomp5 -ldl -lpthread -lm
-+	MSHADOW_LDFLAGS += -L${MKLROOT}/../compiler/lib/intel64 -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_intel_thread.a 
--Wl,--end-group -ldl -lpthread -lm
- else
- ifneq ($(USE_MKLML), 1)
--  MSHADOW_LDFLAGS += -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
-+  MSHADOW_LDFLAGS += -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core
- endif
- endif
- else
-" | patch -p1
+@@ -94,7 +94,7 @@ ifeq (\$(USE_MKL2017), 1)
+      CFLAGS += -DUSE_MKL=1
+      CFLAGS += -I\$(ROOTDIR)/src/operator/mkl/
+      CFLAGS += -I\$(MKLML_ROOT)/include
+-     LDFLAGS += -L\$(MKLML_ROOT)/lib
++     LDFLAGS += -L\$(MKLML_ROOT)/lib/intel64
+ ifeq (\$(USE_MKL2017_EXPERIMENTAL), 1)
+      CFLAGS += -DMKL_EXPERIMENTAL=1
+ else" | patch -l -p1
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to patch MXNet!${NC}"
         return 1
     fi
-    make USE_BLAS=mkl MKLML_ROOT=/opt/intel/mkl USE_MKL2017=1 USE_MKL2017_EXPERIMENTAL=1 \
-         USE_STATIC_MKL=1 USE_OPENCV=0 USE_OPENMP=0
+    make USE_BLAS=mkl MKLML_ROOT=/usr/local/intel/mkl USE_MKL2017=1 USE_MKL2017_EXPERIMENTAL=1 \
+         USE_STATIC_MKL=1 USE_INTEL_PATH=/usr/local/intel USE_OPENCV=0 USE_OPENMP=0
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to compile MXNet!${NC}"
         return 1
     fi
     cd python
-    sudo python setup.py install
+    sudo python setup.py install &&
+    echo "export LD_LIBRARY_PATH=/usr/local/intel/lib/intel64" | tee -a ~/.bashrc
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to install MXNet!${NC}"
