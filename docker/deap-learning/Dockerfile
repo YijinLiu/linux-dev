@@ -14,5 +14,7 @@ ADD docker_tmp_data/deap-learning.sh /home/dl/build/deap-learning.sh
 RUN chown -R dl:dl /home/dl
 USER dl
 WORKDIR /home/dl/build
-RUN ./deap-learning.sh
+ARG SRC
+ARG BLAS
+RUN ./deap-learning.sh --src=$SRC --blas=$BLAS
 WORKDIR /home/dl
