@@ -75,7 +75,7 @@ install_atlas() {
         echo -e "${RED}Failed to configure ATLAS!${NC}"
         return 1
     fi
-    make -j $(nproc) && sudo make install
+    make && sudo make install
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to build ATLAS!${NC}"
