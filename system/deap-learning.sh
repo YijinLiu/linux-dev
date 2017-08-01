@@ -288,6 +288,168 @@ install_scipy() {
     cd ..
 }
 
+install_armadillo() {
+    wget http://sourceforge.net/projects/arma/files/armadillo-7.950.1.tar.xz
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to download armadillo source!${NC}"
+        return 1
+    fi
+    tar xvJf armadillo-7.950.1.tar.xz
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to uncompress armadillo source!${NC}"
+        return 1
+    fi
+	cd armadillo-7.950.1
+    if [ "$blas" == "atlas" ] ; then
+		echo 'diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1428d3e..abc21b7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -27,7 +27,6 @@ include(CheckLibraryExists)
+ ## You will then need to link your programs with -lblas -llapack instead of -larmadillo
+ ## If you'"'"'re using OpenBLAS, link your programs with -lopenblas -llapack instead of -larmadillo
+
+-set(ARMA_USE_WRAPPER true)
+
+
+ # the settings below will be automatically configured by the rest of this script
+@@ -159,14 +158,13 @@ if(APPLE)
+ else()
+
+   set(ARMA_OS unix)
+-
+-  include(ARMA_FindMKL)
+-  include(ARMA_FindACMLMP)
+-  include(ARMA_FindACML)
+-  include(ARMA_FindOpenBLAS)
+-  include(ARMA_FindATLAS)
+-  include(ARMA_FindBLAS)
+-  include(ARMA_FindLAPACK)
++
++  set(ATLAS_FOUND "YES")
++  set(ATLAS_INCLUDE_DIR "/usr/local/ATLAS/include")
++  set(ATLAS_LIBRARIES "satlas")
++
++  set(LAPACK_FOUND "YES")
++  set(LAPACK_LIBRARIES "lapack")
+
+   message(STATUS "     MKL_FOUND = ${MKL_FOUND}"     )
+   message(STATUS "  ACMLMP_FOUND = ${ACMLMP_FOUND}"  )
+@@ -395,7 +393,7 @@ message(STATUS "CMAKE_REQUIRED_INCLUDES   = ${CMAKE_REQUIRED_INCLUDES}"  )
+
+
+ add_library( armadillo ${PROJECT_SOURCE_DIR}/src/wrapper.cpp )
+-target_link_libraries( armadillo ${ARMA_LIBS} )
++target_link_libraries( armadillo "-L/usr/local/ATLAS/lib" ${ARMA_LIBS} )
+ target_include_directories(armadillo INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
+ set_target_properties(armadillo PROPERTIES VERSION ${ARMA_VERSION_MAJOR}.${ARMA_VERSION_MINOR_ALT}.${ARMA_VERSION_PATCH} SOVERSION ${ARMA_VERSION_MAJOR})
+' | patch -l -p1
+	elif [ "$blas" == "openblas" ] ; then
+		echo 'diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1428d3e..cc15b68 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -27,7 +27,6 @@ include(CheckLibraryExists)
+ ## You will then need to link your programs with -lblas -llapack instead of -larmadillo
+ ## If you'"'"'re using OpenBLAS, link your programs with -lopenblas -llapack instead of -larmadillo
+
+-set(ARMA_USE_WRAPPER true)
+
+
+ # the settings below will be automatically configured by the rest of this script
+@@ -160,13 +159,10 @@ else()
+
+   set(ARMA_OS unix)
+
+-  include(ARMA_FindMKL)
+-  include(ARMA_FindACMLMP)
+-  include(ARMA_FindACML)
+-  include(ARMA_FindOpenBLAS)
+-  include(ARMA_FindATLAS)
+-  include(ARMA_FindBLAS)
+-  include(ARMA_FindLAPACK)
++  set(OpenBLAS_FOUND "YES")
++  set(OpenBLAS_LIBRARIES "openblas")
++
++  set(LAPACK_FOUND "YES")
+
+   message(STATUS "     MKL_FOUND = ${MKL_FOUND}"     )
+   message(STATUS "  ACMLMP_FOUND = ${ACMLMP_FOUND}"  )
+@@ -395,8 +391,8 @@ message(STATUS "CMAKE_REQUIRED_INCLUDES   = ${CMAKE_REQUIRED_INCLUDES}"  )
+
+
+ add_library( armadillo ${PROJECT_SOURCE_DIR}/src/wrapper.cpp )
+-target_link_libraries( armadillo ${ARMA_LIBS} )
+-target_include_directories(armadillo INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
++target_link_libraries( armadillo "-L/usr/local/OpenBLAS/lib" ${ARMA_LIBS} )
++target_include_directories(armadillo INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include> "/usr/local/OpenBLAS/include")
+ set_target_properties(armadillo PROPERTIES VERSION ${ARMA_VERSION_MAJOR}.${ARMA_VERSION_MINOR_ALT}.${ARMA_VERSION_PATCH} SOVERSION ${ARMA_VERSION_MAJOR})
+
+ ' | patch -l -p1
+	elif [ "$blas" == "mkl" ] ; then
+		echo 'diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1428d3e..cc489b7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -27,7 +27,6 @@ include(CheckLibraryExists)
+ ## You will then need to link your programs with -lblas -llapack instead of -larmadillo
+ ## If you'"'"'re using OpenBLAS, link your programs with -lopenblas -llapack instead of -larmadillo
+
+-set(ARMA_USE_WRAPPER true)
+
+
+ # the settings below will be automatically configured by the rest of this script
+@@ -160,13 +159,10 @@ else()
+
+   set(ARMA_OS unix)
+
+-  include(ARMA_FindMKL)
+-  include(ARMA_FindACMLMP)
+-  include(ARMA_FindACML)
+-  include(ARMA_FindOpenBLAS)
+-  include(ARMA_FindATLAS)
+-  include(ARMA_FindBLAS)
+-  include(ARMA_FindLAPACK)
++  set(MKL_FOUND "YES")
++  set(MKL_LIBRARIES "mkl_rt")
++
++  set(LAPACK_FOUND "YES")
+
+   message(STATUS "     MKL_FOUND = ${MKL_FOUND}"     )
+   message(STATUS "  ACMLMP_FOUND = ${ACMLMP_FOUND}"  )
+@@ -395,8 +391,8 @@ message(STATUS "CMAKE_REQUIRED_INCLUDES   = ${CMAKE_REQUIRED_INCLUDES}"  )
+
+
+ add_library( armadillo ${PROJECT_SOURCE_DIR}/src/wrapper.cpp )
+-target_link_libraries( armadillo ${ARMA_LIBS} )
+-target_include_directories(armadillo INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
++target_link_libraries( armadillo "-L/usr/local/intel/mkl/lib/intel64" ${ARMA_LIBS} )
++target_include_directories(armadillo INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include> "/usr/local/intel/mkl/include")
+ set_target_properties(armadillo PROPERTIES VERSION ${ARMA_VERSION_MAJOR}.${ARMA_VERSION_MINOR_ALT}.${ARMA_VERSION_PATCH} SOVERSION ${ARMA_VERSION_MAJOR})
+
+ ' | patch -l -p1
+	else
+        echo -e "${YELLOW}ATLAS/OpenBLAS/MKL is required to build Armadillo!${NC}"
+        return 1
+    fi
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to patch armadillo!${NC}"
+        return 1
+    fi
+    mkdir build
+    cd build
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local .. && make && sudo make install
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to build armadillo!${NC}"
+        return 1
+    fi
+    cd ../..
+}
+
 install_theano_pip() {
     sudo pip install Theano
     rc=$?
@@ -808,14 +970,35 @@ index 9c11800..700c0cd 100755
     cd ..
 }
 
+install_google_benchmark() {
+    git clone https://github.com/google/benchmark -b v1.2.0
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to download Google benchmark source!${NC}"
+        return 1
+    fi
+    cd benchmark
+    mkdir build
+    cd build
+    cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc) && sudo make install
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to build Google benchmark!${NC}"
+        return 1
+    fi
+    cd ../..
+}
+
 install_pkgs &&
 install_blas &&
 install_numpy &&
 install_scipy &&
+install_armadillo &&
 install_theano &&
 install_tensorflow &&
 install_mxnet &&
 install_pytorch &&
 install_protobuf &&
 install_cntk &&
+install_google_benchmark &&
 sudo apt autoremove -y
