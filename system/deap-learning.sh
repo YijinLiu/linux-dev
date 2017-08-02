@@ -989,6 +989,73 @@ install_google_benchmark() {
     cd ../..
 }
 
+install_glog() {
+    git clone https://github.com/google/glog -b v0.3.5
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to download glog source!${NC}"
+        return 1
+    fi
+    cd glog
+    echo 'diff --git a/aclocal.m4 b/aclocal.m4
+index 25a9f29..da7afc1 100644
+--- a/aclocal.m4
++++ b/aclocal.m4
+@@ -1,4 +1,4 @@
+-# generated automatically by aclocal 1.14.1 -*- Autoconf -*-
++# generated automatically by aclocal 1.15 -*- Autoconf -*-
+
+ # Copyright (C) 1996-2013 Free Software Foundation, Inc.
+
+@@ -32,10 +32,10 @@ To do so, use the procedure documented by the package, typically 'autoreconf'.])
+ # generated from the m4 files accompanying Automake X.Y.
+ # (This private macro should not be called outside this file.)
+ AC_DEFUN([AM_AUTOMAKE_VERSION],
+-[am__api_version='"'"'1.14'"'"'
++[am__api_version='"'"'1.15'"'"'
+ dnl Some users find AM_AUTOMAKE_VERSION and mistake it for a way to
+ dnl require some minimum version.  Point them to the right macro.
+-m4_if([$1], [1.14.1], [],
++m4_if([$1], [1.15], [],
+       [AC_FATAL([Do not call $0, use AM_INIT_AUTOMAKE([$1]).])])dnl
+ ])
+
+@@ -51,7 +51,7 @@ m4_define([_AM_AUTOCONF_VERSION], [])
+ # Call AM_AUTOMAKE_VERSION and AM_AUTOMAKE_VERSION so they can be traced.
+ # This function is AC_REQUIREd by AM_INIT_AUTOMAKE.
+ AC_DEFUN([AM_SET_CURRENT_AUTOMAKE_VERSION],
+-[AM_AUTOMAKE_VERSION([1.14.1])dnl
++[AM_AUTOMAKE_VERSION([1.15])dnl
+ m4_ifndef([AC_AUTOCONF_VERSION],
+   [m4_copy([m4_PACKAGE_VERSION], [AC_AUTOCONF_VERSION])])dnl
+ _AM_AUTOCONF_VERSION(m4_defn([AC_AUTOCONF_VERSION]))])
+diff --git a/configure b/configure
+index 2ebe549..ea2f1d5 100755
+--- a/configure
++++ b/configure
+@@ -2740,7 +2752,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ # (for sanity checking)
+
+
+-am__api_version='"'"'1.14'"'"'
++am__api_version='"'"'1.15'"'"'
+
+ ac_aux_dir=
+ for ac_dir in "$srcdir" "$srcdir/.." "$srcdir/../.."; do' | patch -l -p1
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to patch glog!${NC}"
+        return 1
+    fi
+    automake --add-missing && ./configure && make -j $(nproc) && sudo make install
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to build glog!${NC}"
+        return 1
+    fi
+    cd ..
+}
+
 install_pkgs &&
 install_blas &&
 install_numpy &&
@@ -1001,4 +1068,5 @@ install_pytorch &&
 install_protobuf &&
 install_cntk &&
 install_google_benchmark &&
+install_glog &&
 sudo apt autoremove -y
