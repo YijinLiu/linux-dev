@@ -989,6 +989,25 @@ install_google_benchmark() {
     cd ../..
 }
 
+install_gflags() {
+    git clone https://github.com/gflags/gflags -b v2.2.1
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to download gflags source!${NC}"
+        return 1
+    fi
+    cd gflags
+    mkdir build
+    cd build
+    cmake .. && make -j $(nproc) && sudo make install
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to build gflags!${NC}"
+        return 1
+    fi
+    cd ../..
+}
+
 install_glog() {
     git clone https://github.com/google/glog -b v0.3.5
     rc=$?
@@ -1047,7 +1066,7 @@ index 2ebe549..ea2f1d5 100755
         echo -e "${RED}Failed to patch glog!${NC}"
         return 1
     fi
-    automake --add-missing && ./configure && make -j $(nproc) && sudo make install
+    automake --add-missing && ./configure --disable-shared && make -j $(nproc) && sudo make install
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to build glog!${NC}"
@@ -1068,5 +1087,6 @@ install_pytorch &&
 install_protobuf &&
 install_cntk &&
 install_google_benchmark &&
+install_gflags &&
 install_glog &&
 sudo apt autoremove -y
