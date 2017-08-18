@@ -7,15 +7,28 @@ NC='\e[0m'
 
 usage() {
     echo "Options:
-    --src=       Whether to build from source
-    --blas=      atlas/openblas/mkl
+    --src=               Whether to build from source (default 1)
+    --blas=              One of atlas/openblas/mkl (default mkl)
+    --enable_caffe2      Whether to enable Caffe2 (default 1)
+    --enable_cntk        Whether to enable CNTK (default 0)
+    --enable_mxnet       Whether to enable mxnet (default 0)
+    --enable_pytorch     Whether to enable PyTorch (default 0)
+    --enable_tensorflow  Whethr to enable Tensorflow (default 1)
+    --enable_theano      Whether to enable Theano (default 0)
 "
 }
 
 src=1
 blas=mkl
+enable_caffe2=1
+enable_cntk=0
+enable_mxnet=0
+enable_pytorch=0
+enable_tensorflow=1
+enable_theano=0
 
-OPTS=`getopt -n 'deap-learning.sh' -o s:,b: -l src:,blas: -- "$@"`
+OPTS=`getopt -n 'deap-learning.sh' -o s:,b: -l src:,blas:,enable_caffe2:,enable_cntk: \
+             -l enable_mxnet:,enable_pytorch:,enable_tensorflow:,enable_theano: -- "$@"`
 rc=$?
 if [ $rc != 0 ] ; then
     usage
@@ -26,6 +39,12 @@ while true; do
     case "$1" in
         -s | --src )                src="$2" ; shift 2 ;;
         -b | --blas )               blas="$2" ; shift 2 ;;
+        --enable_caffe2 )           enable_caffe2="$2" ; shift 2;;
+        --enable_cntk )             enable_cntk="$2" ; shift 2;;
+        --enable_mxnet )            enable_mxnet="$2" ; shift 2;;
+        --enable_pytorch )          enable_pytorch="$2" ; shift 2;;
+        --enable_tensorflow )       enable_tensorflow="$2" ; shift 2;;
+        --enable_theano )           enable_theano="$2" ; shift 2;;
         -- ) shift; break ;;
         * ) echo -e "${RED}Invalid option: -$1${NC}" >&2 ; usage ; exit 1 ;;
     esac
@@ -33,7 +52,7 @@ done
 echo -e ${GREEN}BLAS: $blas${NC}
 
 install_pkgs() {
-    sudo apt install -y --no-install-recommends autoconf automake build-essential clang cmake cpio \
+    sudo apt install -y --no-install-recommends autoconf automake build-essential cmake cpio \
         curl flex gfortran graphviz libboost-dev libtool locate python-dev python-nose-cov \
         python-nose-yanc python-pip python-setuptools python-wheel python-yaml swig unzip wget &&
     sudo -H pip install --upgrade pip &&
@@ -478,7 +497,7 @@ install_theano_src() {
 }
 
 install_theano() {
-    if [ -z "$src" ]; then
+    if [ $src == 0 ]; then
         install_theano_pip
     else
         install_theano_src
@@ -495,37 +514,15 @@ install_tensorflow_pip() {
 }
 
 install_bazel() {
-    echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
-    rc=$?
+    wget https://github.com/bazelbuild/bazel/releases/download/0.5.3/bazel_0.5.3-linux-x86_64.deb
     if [ $rc != 0 ]; then
-        echo -e "${RED}Failed to add bazel apt rep!${NC}"
+        echo -e "${RED}Failed to download Bazel!${NC}"
         return 1
     fi
-    curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add - &&
+    sudo dpkg -i bazel_0.5.3-linux-x86_64.deb
     rc=$?
     if [ $rc != 0 ]; then
-        echo -e "${RED}Failed to add bazel apt key!${NC}"
-        return 1
-    fi
-    sudo apt update && sudo apt install -y bazel
-    rc=$?
-    if [ $rc != 0 ]; then
-        echo -e "${RED}Failed to install bazel!${NC}"
-        return 1
-    fi
-}
-
-install_computecpp() {
-    wget https://raw.githubusercontent.com/yijinliu/linux-dev/master/3rd_party/ComputeCpp-CE-0.2.1-Ubuntu.16.04-64bit.tar.gz
-    rc=$?
-    if [ $rc != 0 ]; then
-        echo -e "${RED}Failed to download ComputeCpp!${NC}"
-        return 1
-    fi
-    sudo tar xvzf ComputeCpp-CE-0.2.1-Ubuntu.16.04-64bit.tar.gz -C /usr/local
-    rc=$?
-    if [ $rc != 0 ]; then
-        echo -e "${RED}Failed to install ComputeCpp!${NC}"
+        echo -e "${RED}Failed to install Bazel!${NC}"
         return 1
     fi
 }
@@ -545,7 +542,7 @@ install_headers() {
 }
 
 install_tensorflow_src() {
-    git clone https://github.com/tensorflow/tensorflow -b v1.2.1
+    git clone https://github.com/tensorflow/tensorflow -b v1.3.0
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download TensorFlow source!${NC}"
@@ -606,11 +603,10 @@ n
 }
 
 install_tensorflow() {
-    if [ -z "$src" ]; then
+    if [ $src == 0 ]; then
         install_tensorflow_pip
     else
         install_bazel &&
-        install_computecpp &&
         install_tensorflow_src
     fi
 }
@@ -706,7 +702,7 @@ index 0ff2fbd..955a94c 100644
 }
 
 install_mxnet() {
-    if [ -z "$src" ]; then
+    if [ $src == 0 ]; then
         install_mxnet_pip
     else
         install_mxnet_src
@@ -999,7 +995,7 @@ install_gflags() {
     cd gflags
     mkdir build
     cd build
-    cmake .. && make -j $(nproc) && sudo make install
+    cmake -DCMAKE_CXX_FLAGS=-fPIC .. && make -j $(nproc) && sudo make install
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to build gflags!${NC}"
@@ -1066,7 +1062,8 @@ index 2ebe549..ea2f1d5 100755
         echo -e "${RED}Failed to patch glog!${NC}"
         return 1
     fi
-    automake --add-missing && ./configure --disable-shared && make -j $(nproc) && sudo make install
+    automake --add-missing && ./configure --disable-shared --with-pic &&
+    make -j $(nproc) && sudo make install
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to build glog!${NC}"
@@ -1075,18 +1072,88 @@ index 2ebe549..ea2f1d5 100755
     cd ..
 }
 
+install_caffe2() {
+    git clone --recursive https://github.com/caffe2/caffe2.git -b v0.8.1
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to download Caffe2 source!${NC}"
+        return 1
+    fi
+    mkdir build
+    cd build
+    cmake -DBUILD_SHARED_LIBS=OFF -DUSE_CUDA=OFF -DUSE_GLOO=OFF -DUSE_LMDB=OFF -DUSE_MPI=OFF \
+        -DUSE_NCCL=OFF -DUSE_OPENCV=OFF -DUSE_OPENMP=OFF -DUSE_ROCKSDB=OFF -DUSE_THREADS=OFF .. &&
+    make -j $(nproc) && sudo make install
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to build Caffe2!${NC}"
+        return 1
+    fi
+}
+
+
 install_pkgs &&
 install_blas &&
 install_numpy &&
 install_scipy &&
-install_armadillo &&
-install_theano &&
-install_tensorflow &&
-install_mxnet &&
-install_pytorch &&
 install_protobuf &&
-install_cntk &&
-install_google_benchmark &&
 install_gflags &&
 install_glog &&
+install_google_benchmark &&
+install_armadillo
+rc=$?
+if [ $rc != 0 ]; then
+    exit 1
+fi
+
+# TODO: Build NNPack.
+
+if [ $enable_caffe2 != 0 ]; then
+    install_caffe2
+    rc=$?
+    if [ $rc != 0 ]; then
+        exit 1
+    fi
+fi
+
+if [ $enable_cntk != 0 ]; then
+    install_cntk
+    rc=$?
+    if [ $rc != 0 ]; then
+        exit 1
+    fi
+fi
+
+if [ $enable_mxnet != 0 ]; then
+    install_mxnet
+    rc=$?
+    if [ $rc != 0 ]; then
+        exit 1
+    fi
+fi
+
+if [ $enable_pytorch != 0 ]; then
+    install_pytorch
+    rc=$?
+    if [ $rc != 0 ]; then
+        exit 1
+    fi
+fi
+
+if [ $enable_tensorflow != 0 ]; then
+    install_tensorflow
+    rc=$?
+    if [ $rc != 0 ]; then
+        exit 1
+    fi
+fi
+
+if [ $enable_theano != 0 ] ; then
+    install_theano
+    rc=$?
+    if [ $rc != 0 ]; then
+        exit 1
+    fi
+fi
+
 sudo apt autoremove -y
