@@ -8,7 +8,7 @@ NC='\e[0m'
 usage() {
     echo "Options:
     --src=               Whether to build from source (default 1)
-    --blas=              One of atlas/openblas/mkl (default mkl)
+    --blas=              One of ATLAS/OpenBLAS/MKL (default MKL)
     --enable_caffe2      Whether to enable Caffe2 (default 1)
     --enable_cntk        Whether to enable CNTK (default 0)
     --enable_mxnet       Whether to enable mxnet (default 0)
@@ -19,7 +19,7 @@ usage() {
 }
 
 src=1
-blas=mkl
+blas=MKL
 enable_caffe2=1
 enable_cntk=0
 enable_mxnet=0
@@ -104,7 +104,7 @@ install_atlas() {
 }
 
 install_openblas() {
-    git clone https://github.com/xianyi/OpenBLAS -b v0.2.19
+    git clone --depth=1 https://github.com/xianyi/OpenBLAS -b v0.2.19
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download OpenBLAS source!${NC}"
@@ -153,9 +153,9 @@ ARCH_SELECTED=ALL
 
 install_blas() {
     case "$blas" in
-        "atlas" ) install_atlas ;;
-        "openblas" ) install_openblas ;;
-        "mkl" ) install_mkl ;;
+        "ATLAS" ) install_atlas ;;
+        "OpenBLAS" ) install_openblas ;;
+        "MKL" ) install_mkl ;;
         * ) echo -e "${YELLOW}No BLAS will be install.${NC}"
     esac
 }
@@ -188,7 +188,7 @@ ARCH_SELECTED=ALL
 }
 
 install_daal() {
-    git clone https://github.com/01org/daal -b 2017_u3
+    git clone --depth=1 https://github.com/01org/daal -b 2017_u3
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download Intel DAAL source!${NC}"
@@ -206,7 +206,7 @@ install_daal() {
 }
 
 install_mkl_dnn() {
-    git clone https://github.com/01org/mkl-dnn -b v0.9
+    git clone --depth=1 https://github.com/01org/mkl-dnn -b v0.9
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download Intel MKL-DNN source!${NC}"
@@ -225,7 +225,7 @@ install_mkl_dnn() {
 }
 
 install_numpy() {
-    git clone https://github.com/numpy/numpy -b v1.13.1
+    git clone --depth=1 https://github.com/numpy/numpy -b v1.13.1
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download numpy source!${NC}"
@@ -260,16 +260,16 @@ index 0fba865..39d624b 100644
         return 1
     fi
     blas_cfg=
-    if [ "$blas" == "atlas" ] ; then
+    if [ "$blas" == "ATLAS" ] ; then
         blas_cfg='[atlas]
 library_dirs = /usr/local/ATLAS/lib
 include_dirs = /usr/local/ATLAS/include'
-    elif [ "$blas" == "openblas" ] ; then
+    elif [ "$blas" == "OpenBLAS" ] ; then
         blas_cfg='[openblas]
 library_dirs = /usr/local/OpenBLAS/lib
 runtime_library_dirs = /usr/local/OpenBLAS/lib
 include_dirs = /usr/local/OpenBLAS/include'
-    elif [ "$blas" == "mkl" ] ; then
+    elif [ "$blas" == "MKL" ] ; then
         blas_cfg='[mkl]
 library_dirs = /usr/local/intel/mkl/lib/intel64
 runtime_library_dirs = /usr/local/intel/mkl/lib/intel64
@@ -290,7 +290,7 @@ ${blas_cfg}" > site.cfg
 }
 
 install_scipy() {
-    git clone https://github.com/scipy/scipy -b v0.19.1
+    git clone --depth=1 https://github.com/scipy/scipy -b v0.19.1
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download scipy source!${NC}"
@@ -321,7 +321,7 @@ install_armadillo() {
         return 1
     fi
 	cd armadillo-7.950.1
-    if [ "$blas" == "atlas" ] ; then
+    if [ "$blas" == "ATLAS" ] ; then
 		echo 'diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 1428d3e..abc21b7 100644
 --- a/CMakeLists.txt
@@ -365,7 +365,7 @@ index 1428d3e..abc21b7 100644
  target_include_directories(armadillo INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
  set_target_properties(armadillo PROPERTIES VERSION ${ARMA_VERSION_MAJOR}.${ARMA_VERSION_MINOR_ALT}.${ARMA_VERSION_PATCH} SOVERSION ${ARMA_VERSION_MAJOR})
 ' | patch -l -p1
-	elif [ "$blas" == "openblas" ] ; then
+	elif [ "$blas" == "OpenBLAS" ] ; then
 		echo 'diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 1428d3e..cc15b68 100644
 --- a/CMakeLists.txt
@@ -407,7 +407,7 @@ index 1428d3e..cc15b68 100644
  set_target_properties(armadillo PROPERTIES VERSION ${ARMA_VERSION_MAJOR}.${ARMA_VERSION_MINOR_ALT}.${ARMA_VERSION_PATCH} SOVERSION ${ARMA_VERSION_MAJOR})
 
  ' | patch -l -p1
-	elif [ "$blas" == "mkl" ] ; then
+	elif [ "$blas" == "MKL" ] ; then
 		echo 'diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 1428d3e..cc489b7 100644
 --- a/CMakeLists.txt
@@ -469,6 +469,26 @@ index 1428d3e..cc489b7 100644
     cd ../..
 }
 
+install_eigen() {
+    wget -O eigen-3.3.4.tar.bz2 http://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2 &&
+    tar xvjf eigen-3.3.4.tar.bz2
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to download eigen!${NC}"
+        return 1
+    fi
+    cd eigen-eigen-5a0156e40feb
+    mkdir build
+    cd build
+    cmake .. && sudo make install
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to install eigen!${NC}"
+        return 1
+    fi
+    cd ../..
+}
+
 install_theano_pip() {
     sudo pip install Theano
     rc=$?
@@ -479,7 +499,7 @@ install_theano_pip() {
 }
 
 install_theano_src() {
-    git clone https://github.com/Theano/Theano -b rel-0.9.0
+    git clone --depth=1 https://github.com/Theano/Theano -b rel-0.9.0
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download Theano source!${NC}"
@@ -514,11 +534,9 @@ install_tensorflow_pip() {
 }
 
 install_bazel() {
-    wget https://github.com/bazelbuild/bazel/releases/download/0.5.3/bazel_0.5.3-linux-x86_64.deb
-    if [ $rc != 0 ]; then
-        echo -e "${RED}Failed to download Bazel!${NC}"
-        return 1
-    fi
+    sudo apt install -y --no-install-recommends bash-completion openjdk-8-jdk pkg-config zip \
+        zlib1g-dev &&
+    wget https://github.com/bazelbuild/bazel/releases/download/0.5.3/bazel_0.5.3-linux-x86_64.deb &&
     sudo dpkg -i bazel_0.5.3-linux-x86_64.deb
     rc=$?
     if [ $rc != 0 ]; then
@@ -542,17 +560,17 @@ install_headers() {
 }
 
 install_tensorflow_src() {
-    git clone https://github.com/tensorflow/tensorflow -b v1.3.0
+    git clone --depth=1 https://github.com/tensorflow/tensorflow -b v1.3.0
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download TensorFlow source!${NC}"
         return 1
     fi
     cd tensorflow
-    chmod +x ./configure &&
-    sudo updatedb &&
+    chmod +x ./configure
+    sudo updatedb
     intel_cfgs=
-    if [ "$blas" == "mkl" ] ; then
+    if [ "$blas" == "MKL" ] ; then
         intel_cfgs="y
 n
 /usr/local/intel/mkl"
@@ -564,15 +582,13 @@ n
 $intel_cfgs
 -march=native
 y
-y
+n
 n
 y
 n
-y
 n
-/usr/bin/clang++
-/usr/bin/clang
-/usr/local/ComputeCpp-CE-0.2.1-Linux
+n
+n
 " | ./configure
     rc=$?
     if [ $rc != 0 ]; then
@@ -593,7 +609,7 @@ n
     sudo install bazel-bin/tensorflow/libtensorflow.so bazel-bin/tensorflow/libtensorflow_cc.so \
         /usr/local/lib &&
     install_headers tensorflow /usr/local/include &&
-    sudo pip install /tmp/tensorflow_pkg/tensorflow-1.2.1-cp27-cp27mu-linux_x86_64.whl
+    sudo pip install /tmp/tensorflow_pkg/tensorflow-1.3.0-cp27-cp27mu-linux_x86_64.whl
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to install Tensorflow!${NC}"
@@ -622,7 +638,7 @@ install_mxnet_pip() {
 
 
 install_mxnet_src() {
-    git clone --recursive https://github.com/dmlc/mxnet -b v0.10.0
+    git clone --depth=1 --recursive https://github.com/dmlc/mxnet -b v0.10.0
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download MXNet source!${NC}"
@@ -677,11 +693,11 @@ index 0ff2fbd..955a94c 100644
         return 1
     fi
     BLAS_ARGS=
-    if [ "$blas" == "mkl" ] ; then
+    if [ "$blas" == "MKL" ] ; then
         BLAS_ARGS="USE_BLAS=mkl MKLML_ROOT=/usr/local/intel/mkl USE_MKL2017=1 USE_MKL2017_EXPERIMENTAL=1 USE_STATIC_MKL=1 USE_INTEL_PATH=/usr/local/intel"
-    elif [ "$blas" == "openblas" ] ; then
+    elif [ "$blas" == "OpenBLAS" ] ; then
         BLAS_ARGS="USE_BLAS=openblas"
-    elif [ "$blas" == "atlas" ] ; then
+    elif [ "$blas" == "ATLAS" ] ; then
         BLAS_ARGS="USE_BLAS=atlas"
     fi
     make ${BLAS_ARGS} USE_OPENCV=0 USE_OPENMP=0 -j $(nproc)
@@ -710,7 +726,7 @@ install_mxnet() {
 }
 
 install_pytorch() {
-    git clone https://github.com/pytorch/pytorch -b v0.1.12
+    git clone --depth=1 https://github.com/pytorch/pytorch -b v0.1.12
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download pytorch source!${NC}"
@@ -719,13 +735,13 @@ install_pytorch() {
     cd pytorch
     BLAS_LIBS=
     BLAS_LFLAGS=
-    if [ "$blas" == "mkl" ] ; then
+    if [ "$blas" == "MKL" ] ; then
         BLAS_LIBS="mkl_rt"
         BLAS_LFLAGS="-L/usr/local/intel/mkl/lib/intel64 -Wl,-rpath,/usr/local/intel/mkl/lib/intel64"
-    elif [ "$blas" == "openblas" ] ; then
+    elif [ "$blas" == "OpenBLAS" ] ; then
         BLAS_LIBS="openblas"
         BLAS_LFLAGS="-L/usr/local/OpenBLAS/lib -Wl,-rpath,/usr/local/OpenBLAS/lib"
-    elif [ "$blas" == "atlas" ] ; then
+    elif [ "$blas" == "ATLAS" ] ; then
         BLAS_LIBS="satlas lapack"
         BLAS_LFLAGS="-L/usr/local/ATLAS/lib -Wl,-rpath,/usr/local/ATLAS/lib"
     fi
@@ -780,7 +796,7 @@ index c4e6694..43873c5 100644
 }
 
 install_protobuf() {
-    git clone https://github.com/google/protobuf -b v3.3.0
+    git clone --depth=1 https://github.com/google/protobuf -b v3.3.0
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download protobuf source!${NC}"
@@ -799,7 +815,7 @@ install_protobuf() {
 }
 
 install_cntk() {
-    git clone https://github.com/Microsoft/CNTK -b v2.0
+    git clone --depth=1 https://github.com/Microsoft/CNTK -b v2.0
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download CNTK source!${NC}"
@@ -929,7 +945,7 @@ index 9c11800..700c0cd 100755
         echo -e "${RED}Failed to patch CNTK source!${NC}"
         return 1
     fi
-    if [ "$blas" == "mkl" ] ; then
+    if [ "$blas" == "MKL" ] ; then
         wget --user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36" \
             https://www.microsoft.com/en-us/cognitive-toolkit/wp-content/uploads/sites/3/2017/05/CNTKCustomMKL-Linux-3.tgz
         rc=$?
@@ -945,11 +961,11 @@ index 9c11800..700c0cd 100755
             return 1
         fi
         ./configure --with-buildtype=release --with-mkl-sequential=/usr/local/CNTKCustomMKL
-    elif [ "$blas" == "openblas" ] ; then
+    elif [ "$blas" == "OpenBLAS" ] ; then
         ./configure --with-buildtype=release --with-openblas=/usr/local/OpenBLAS
     else
-        echo -e "${YELLOW}CNTK needs MKL or OpenBLAS!${NC}"
-        return
+        echo -e "${RED}CNTK needs MKL or OpenBLAS!${NC}"
+        return 1
     fi
     rc=$?
     if [ $rc != 0 ]; then
@@ -967,7 +983,7 @@ index 9c11800..700c0cd 100755
 }
 
 install_google_benchmark() {
-    git clone https://github.com/google/benchmark -b v1.2.0
+    git clone --depth=1 https://github.com/google/benchmark -b v1.2.0
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download Google benchmark source!${NC}"
@@ -986,7 +1002,7 @@ install_google_benchmark() {
 }
 
 install_gflags() {
-    git clone https://github.com/gflags/gflags -b v2.2.1
+    git clone --depth=1 https://github.com/gflags/gflags -b v2.2.1
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download gflags source!${NC}"
@@ -1005,7 +1021,7 @@ install_gflags() {
 }
 
 install_glog() {
-    git clone https://github.com/google/glog -b v0.3.5
+    git clone --depth=1 https://github.com/google/glog -b v0.3.5
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download glog source!${NC}"
@@ -1073,34 +1089,79 @@ index 2ebe549..ea2f1d5 100755
 }
 
 install_caffe2() {
-    git clone --recursive https://github.com/caffe2/caffe2.git -b v0.8.1
+    git clone https://github.com/caffe2/caffe2.git -b v0.8.1
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to download Caffe2 source!${NC}"
         return 1
     fi
+    cd caffe2
+    git submodule update --init --recursive third_party/googletest \
+        third_party/protobuf third_party/pybind11
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to sync submodules!${NC}"
+        return 1
+    fi
+    echo 'diff --git a/cmake/Dependencies.cmake b/cmake/Dependencies.cmake
+index 724ec52..a4ed34c 100644
+--- a/cmake/Dependencies.cmake
++++ b/cmake/Dependencies.cmake
+@@ -26,19 +26,14 @@ if(BLAS STREQUAL "Eigen")
+   # Eigen is header-only and we do not have any dependent libraries
+   add_definitions(-DCAFFE2_USE_EIGEN_FOR_BLAS)
+ elseif(BLAS STREQUAL "ATLAS")
+-  find_package(Atlas REQUIRED)
+-  include_directories(SYSTEM ${ATLAS_INCLUDE_DIRS})
+-  list(APPEND Caffe2_DEPENDENCY_LIBS ${ATLAS_LIBRARIES})
+-  list(APPEND Caffe2_DEPENDENCY_LIBS cblas)
++  include_directories(SYSTEM "/usr/local/ATLAS/include")
++  list(APPEND Caffe2_DEPENDENCY_LIBS "-L/usr/local/ATLAS/lib" "lapack" "cblas" "f77blas" "atlas" "gfortran" "quadmath")
+ elseif(BLAS STREQUAL "OpenBLAS")
+-  find_package(OpenBLAS REQUIRED)
+-  include_directories(SYSTEM ${OpenBLAS_INCLUDE_DIR})
+-  list(APPEND Caffe2_DEPENDENCY_LIBS ${OpenBLAS_LIB})
+-  list(APPEND Caffe2_DEPENDENCY_LIBS cblas)
++  include_directories(SYSTEM "/usr/local/OpenBLAS/include")
++  list(APPEND Caffe2_DEPENDENCY_LIBS "-L/usr/local/OpenBLAS/lib" "openblas" "gfortran" "quadmath")
+ elseif(BLAS STREQUAL "MKL")
+-  find_package(MKL REQUIRED)
+-  include_directories(SYSTEM ${MKL_INCLUDE_DIR})
+-  list(APPEND Caffe2_DEPENDENCY_LIBS ${MKL_LIBRARIES})
++  include_directories(SYSTEM "/usr/local/intel/mkl/include")
++  list(APPEND Caffe2_DEPENDENCY_LIBS "-L/usr/local/intel/mkl/lib/intel64" "-Wl,--start-group" "mkl_intel_lp64" "mkl_sequential" "mkl_core" "-Wl,--end-group")
+   add_definitions(-DCAFFE2_USE_MKL)
+ elseif(BLAS STREQUAL "vecLib")
+   find_package(vecLib REQUIRED)' | patch -p1 -l
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to patch Caffe2!${NC}"
+        return 1
+    fi
     mkdir build
     cd build
-    cmake -DBUILD_SHARED_LIBS=OFF -DUSE_CUDA=OFF -DUSE_GLOO=OFF -DUSE_LMDB=OFF -DUSE_MPI=OFF \
-        -DUSE_NCCL=OFF -DUSE_OPENCV=OFF -DUSE_OPENMP=OFF -DUSE_ROCKSDB=OFF -DUSE_THREADS=OFF .. &&
+    cmake -DBLAS=$blas -DBUILD_PYTHON=OFF -DBUILD_BINARY=ON -DBUILD_SHARED_LIBS=OFF -DUSE_CUDA=OFF \
+          -DUSE_GLOO=OFF -DUSE_LMDB=OFF -DUSE_MPI=OFF -DUSE_NCCL=OFF -DUSE_NNPACK=OFF \
+          -DUSE_OPENCV=OFF -DUSE_OPENMP=OFF -DUSE_ROCKSDB=OFF -DUSE_THREADS=OFF .. &&
     make -j $(nproc) && sudo make install
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to build Caffe2!${NC}"
         return 1
     fi
+    cd ../..
 }
 
 
 install_pkgs &&
 install_blas &&
 install_numpy &&
-install_scipy &&
 install_protobuf &&
 install_gflags &&
 install_glog &&
 install_google_benchmark &&
-install_armadillo
+install_armadillo &&
+install_eigen
 rc=$?
 if [ $rc != 0 ]; then
     exit 1

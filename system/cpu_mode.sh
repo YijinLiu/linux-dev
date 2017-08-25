@@ -11,8 +11,8 @@ usage() {
 "
 }
 
-OPTS=`getopt -n 'cpu_mode.sh' -a -o m \
-             -l mode \
+OPTS=`getopt -n 'cpu_mode.sh' -a -o m: \
+             -l mode: \
              -- "$@"`
 rc=$?
 if [ $rc != 0 ] ; then
