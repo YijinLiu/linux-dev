@@ -133,16 +133,13 @@ install_mkl() {
     fi
     tar xvzf l_mkl_2017.3.196.tgz &&
     chmod +x l_mkl_2017.3.196/install.sh &&
-    echo '
-ACCEPT_EULA=accept
+    echo 'ACCEPT_EULA=accept
 CONTINUE_WITH_OPTIONAL_ERROR=yes
-PSET_INSTALL_DIR=/usr/local/intel
 CONTINUE_WITH_INSTALLDIR_OVERWRITE=yes
-COMPONENTS=DEFAULTS
+PSET_INSTALL_DIR=/usr/local/intel
+ARCH_SELECTED=INTEL64
 PSET_MODE=install
-SIGNING_ENABLED=yes
-ARCH_SELECTED=ALL
-' > mkl_2017.3.196.silent.cfg &&
+COMPONENTS=DEFAULTS' > mkl_2017.3.196.silent.cfg &&
     sudo l_mkl_2017.3.196/install.sh -s mkl_2017.3.196.silent.cfg
     rc=$?
     if [ $rc != 0 ]; then
@@ -169,22 +166,26 @@ install_ipp() {
     fi
     tar xvzf l_ipp_2017.3.196.tgz &&
     chmod +x l_ipp_2017.3.196/install.sh &&
-    echo '
-ACCEPT_EULA=accept
+    echo 'ACCEPT_EULA=accept
 CONTINUE_WITH_OPTIONAL_ERROR=yes
-PSET_INSTALL_DIR=/usr/local/intel
 CONTINUE_WITH_INSTALLDIR_OVERWRITE=yes
-COMPONENTS=DEFAULTS
+PSET_INSTALL_DIR=/usr/local/intel
+ARCH_SELECTED=INTEL64
 PSET_MODE=install
-SIGNING_ENABLED=yes
-ARCH_SELECTED=ALL
-' > ipp_2017.3.196.silent.cfg &&
+COMPONENTS=;intel-ipp-l-common__noarch' > ipp_2017.3.196.silent.cfg &&
     sudo l_ipp_2017.3.196/install.sh -s ipp_2017.3.196.silent.cfg
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to install Intel IPP!${NC}"
         return 1
     fi
+    wget http://registrationcenter-download.intel.com/akdlm/irc_nas/9831/l_ippiw_p_2017.3.013.tgz
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to download Intel IPP IW!${NC}"
+        return 1
+    fi
+    tar xvzf l_ippiw_p_2017.3.013.tgz
 }
 
 install_daal() {
@@ -549,8 +550,8 @@ install_headers() {
     src=$1
     dst=$2
     for header in $(find $src -name "*.h") ; do
-        dir=$(dir $header)
-        sudo mkdir -p $dst/$dir && sudo cp $header $dst/$dir
+        dir=$(dirname $header)
+        sudo mkdir -p $dst/$dir && sudo cp $header $dst/$dir/
         rc=$?
         if [ $rc != 0 ]; then
             echo -e "${RED}Failed to install $header!${NC}"
@@ -584,7 +585,7 @@ $intel_cfgs
 y
 n
 n
-y
+n
 n
 n
 n
@@ -608,7 +609,8 @@ n
     sudo mkdir -p /usr/local/lib &&
     sudo install bazel-bin/tensorflow/libtensorflow.so bazel-bin/tensorflow/libtensorflow_cc.so \
         /usr/local/lib &&
-    install_headers tensorflow /usr/local/include &&
+    install_headers tensorflow/cc /usr/local/include &&
+    install_headers tensorflow/core /usr/local/include &&
     sudo pip install /tmp/tensorflow_pkg/tensorflow-1.3.0-cp27-cp27mu-linux_x86_64.whl
     rc=$?
     if [ $rc != 0 ]; then
