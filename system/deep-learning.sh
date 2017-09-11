@@ -611,6 +611,12 @@ n
         /usr/local/lib &&
     install_headers tensorflow/cc /usr/local/include &&
     install_headers tensorflow/core /usr/local/include &&
+    cd bazel-genfiles &&
+    install_headers tensorflow/cc /usr/local/include &&
+    install_headers tensorflow/core /usr/local/include &&
+    sudo mkdir -p /usr/local/include/third_party &&
+    sudo cp -a third_party/eigen3 /usr/local/include/third_party/ &&
+    cd .. &&
     sudo pip install /tmp/tensorflow_pkg/tensorflow-1.3.0-cp27-cp27mu-linux_x86_64.whl
     rc=$?
     if [ $rc != 0 ]; then
