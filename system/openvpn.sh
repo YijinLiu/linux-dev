@@ -12,12 +12,13 @@ usage() {
     --init
     --port #PORT
     --addr IP
+    --intfc network interface
     --client name
 "
 }
 
-OPTS=`getopt -n 'openvpn.sh' -a -o ip:c:a: \
-             -l init,port:,client:,addr: \
+OPTS=`getopt -n 'openvpn.sh' -a -o ip:c:a:n: \
+             -l init,port:,client:,addr:,intfc: \
              -- "$@"`
 rc=$?
 if [ $rc != 0 ] ; then
@@ -29,6 +30,7 @@ init=
 port=1194
 client=
 addr=
+intfc=eth0
 eval set -- "$OPTS"
 while true; do
     case "$1" in
@@ -36,6 +38,7 @@ while true; do
         -p | --port )        port=$2 ; shift 2 ;;
         -c | --client )      client=$2 ; shift 2 ;;
         -a | --addr )        addr=$2; shift 2 ;;
+        -n | --intfc )       intfc=$2; shift 2 ;;
         -- ) shift; break ;;
         * ) echo -e "${RED}Invalid option: -$1${NC}" >&2 ; usage ; exit 1 ;;
     esac
@@ -80,9 +83,9 @@ sysctl -w net.ipv4.ip_forward=1 &&
 sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf &&
 iptables -A FORWARD -i tun0 -j ACCEPT &&
 iptables -A FORWARD -o tun0 -j ACCEPT &&
-iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eno1 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o ${intfc} -j MASQUERADE &&
 systemctl start openvpn@server.service &&
-do systemctl enable openvpn@server.service"
+systemctl enable openvpn@server.service"
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to init OpenVPN server!${NC}"
