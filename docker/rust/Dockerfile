@@ -6,12 +6,18 @@ RUN apt update && \
 RUN echo America/Los_Angeles > /etc/timezone
 RUN dpkg-reconfigure --frontend noninteractive tzdata
 
-RUN useradd rust --shell /bin/bash --groups sudo
-RUN echo 'rust ALL = NOPASSWD: ALL' > /etc/sudoers.d/rust
+ARG USER
+ARG UID
+ARG GID
+ARG VERSION
 
-ADD docker_tmp_data/* /home/rust/build/
-RUN chown -R rust:rust /home/rust
-USER rust
-WORKDIR /home/rust/build
-RUN ./rust.sh
-WORKDIR /home/rust
+RUN groupadd -g $GID $USER
+RUN useradd -u $UID -g $USER --groups sudo --shell /bin/bash $USER
+RUN echo "$USER ALL = NOPASSWD: ALL" > /etc/sudoers.d/$USER
+
+ADD docker_tmp_data/* /home/$USER/build/
+RUN chown -R $USER:$USER /home/$USER
+USER $USER
+WORKDIR /home/$USER/build
+RUN ./rust.sh --rust_ver=$VERSION
+WORKDIR /home/$USER

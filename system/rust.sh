@@ -22,7 +22,7 @@ if [ $rc != 0 ] ; then
     exit 1
 fi
 
-rust_ver=1.22.1
+rust_ver=1.24.1
 eval set -- "$OPTS"
 while true; do
     case "$1" in
