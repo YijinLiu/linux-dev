@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 RED='\e[0;31m'
 GREEN='\e[0;92m'
@@ -9,7 +9,7 @@ usage() {
     echo "Options:
     --all
     --packages  Install needed packages.
-    --history   Record commands in ~/history
+    --histories   Record commands in ~/history
     --vimrc     Customize vimrc
     --docker    Install docker
 "

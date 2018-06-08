@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 # Usage:
 # 1. Install NFS client:
