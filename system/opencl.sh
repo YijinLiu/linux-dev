@@ -231,7 +231,7 @@ clone_repo() {
 install_intel_neo() {
     arch=$1
     case "$arch" in
-        broadwell | skylake | silvermont ) ;;
+        broadwell | skylake | silvermont | goldmont-plus ) ;;
         * ) echo -e "${YELLOW}Architecture $arch might not be supported.${NC}"
     esac
     if [ ! -d "compute-runtime" ]; then
@@ -263,11 +263,18 @@ install_intel_neo() {
     ROOT=$(pwd)
     mkdir build
     cd build
-    cmake -DCMAKE_BUILD_TYPE=Release $ROOT/compute-runtime &&
-    make -j$(nproc) && sudo make install
+    cmake -DCMAKE_BUILD_TYPE=Release $ROOT/compute-runtime && make -j$(nproc)
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to build Intel NEO driver.${NC}"
+        return 1
+    fi
+    # ldconfig if needed otherwise Neo driver won't be able to find so of these so that are needed
+    # to compile program.
+    sudo make install && sudo ldconfig
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to install Intel NEO driver.${NC}"
         return 1
     fi
     cd ..

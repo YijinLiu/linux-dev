@@ -1,7 +1,5 @@
 WORK_DIR:=$(shell readlink -f $(dir $(lastword $(MAKEFILE_LIST))))
 
-SRC?=1
-BLAS?=MKL
 VERSION?=`date '+%Y-%m-%d'`
 
 default: clean
