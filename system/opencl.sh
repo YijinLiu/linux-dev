@@ -60,6 +60,26 @@ install_opencl_headers() {
         echo -e "${RED}Failed to install OpenCL-Headers.${NC}"
         return 1
     fi
+
+    if [ ! -d "OpenCL-CLHPP" ]; then
+        git clone --depth=1 https://github.com/KhronosGroup/OpenCL-CLHPP
+        rc=$?
+        if [ $rc != 0 ]; then
+            echo -e "${RED}Failed to download OpenCL-CLHPP.${NC}"
+            return 1
+        fi
+    fi
+    cd OpenCL-CLHPP
+    mkdir -p build
+    cd build
+    cmake -DBUILD_DOCS=NO -DBUILD_EXAMPLES=NO -DBUILD_TESTS=NO .. && make &&
+    sudo cp -av include/CL $prefix/include/
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to install OpenCL C++ headers.${NC}"
+        return 1
+    fi
+    cd ../..
 }
 
 install_icd_loader() {
@@ -275,6 +295,12 @@ install_intel_neo() {
     rc=$?
     if [ $rc != 0 ]; then
         echo -e "${RED}Failed to install Intel NEO driver.${NC}"
+        return 1
+    fi
+    sudo usermod -a -G video ${USER}
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo -e "${RED}Failed to add current user to group 'video'.${NC}"
         return 1
     fi
     cd ..
