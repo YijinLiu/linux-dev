@@ -95,6 +95,8 @@ execute pathogen#infect()
 
 syntax on
 filetype plugin indent on
+highlight RedundantWhitespace ctermbg=red guibg=red
+match RedundantWhitespace /\\s\\+$/
 " | sudo tee -a /etc/vim/vimrc
     rc=$?
     if [ $rc != 0 ]; then
