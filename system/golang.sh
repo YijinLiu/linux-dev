@@ -111,7 +111,7 @@ if [ $rc != 0 ]; then
 fi
 
 sudo mkdir -p /etc/vim/bundle &&
-sudo git clone -b v1.14 --depth 1 https://github.com/fatih/vim-go.git /etc/vim/bundle/vim-go
+sudo git clone -b v1.28 --depth 1 https://github.com/fatih/vim-go.git /etc/vim/bundle/vim-go
 rc=$?
 if [ $rc != 0 ]; then
     echo -e "${RED}Failed to install vim-go!${NC}"
