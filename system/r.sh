@@ -22,7 +22,7 @@ if [ $rc != 0 ] ; then
     exit 1
 fi
 
-version=4.2.2
+version=4.2.3
 eval set -- "$OPTS"
 while true; do
     case "$1" in
@@ -32,12 +32,28 @@ while true; do
     esac
 done
 
-exit
+# Visit https://software.seek.intel.com/performance-libraries
+# to find latest versions of MKL and IPP.
+ver="2023.0.0.25398"
+if [ ! -d "l_onemkl_p_${ver}_offline" ]; then
+    if [ ! -f "l_onemkl_p_${ver}_offline.sh" ]; then
+        wget https://registrationcenter-download.intel.com/akdlm/irc_nas/19138/l_onemkl_p_${ver}_offline.sh
+    fi
+    chmod +x l_onemkl_p_${ver}_offline.sh
+    ./l_onemkl_p_${ver}_offline.sh -x -s
+fi
+sudo l_onemkl_p_${ver}_offline/install.sh -s --eula=accept --action=install --install-dir=/opt/intel
+MKL_ROOT=/opt/intel/mkl/latest
+MKL="-Wl,--start-group ${MKL_ROOT}/lib/intel64/libmkl_gf_lp64.a \
+${MKL_ROOT}/lib/intel64/libmkl_gnu_thread.a ${MKL_ROOT}/lib/intel64/libmkl_core.a \
+-Wl,--end-group -lgomp -lpthread"
 
 if [ ! -d R-$version ] ; then
     wget -O - https://cran.rstudio.com/src/base/R-4/R-$version.tar.gz | tar xz
 fi
 cd R-$version
-./configure --prefix=/usr/local --enable-R-shlib --enable-memory-profiling
+./configure  --with-blas="$MKL" --with-lapack --prefix=/usr/local --enable-R-shlib \
+    --enable-memory-profiling
 make
 sudo make install
+sudo rm -rf /opt/intel /var/intel

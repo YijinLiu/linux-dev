@@ -23,9 +23,9 @@ ADD docker_tmp_data/* /home/$USER/build/
 RUN chown -R $USER:$USER /home/$USER
 USER $USER
 WORKDIR /home/$USER/build
-RUN ./r.sh --version=$VERSION
+RUN ./r.sh --version=$VERSION && cd .. && sudo rm -rf build
 WORKDIR /home/$USER
 
 # docker run -it --user=${USER} -v /home/${USER}/projects:/home/${USER}/projects \
 #     -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY --device /dev/snd \
-#     --name r-${USER} ${USER}/r:4.2.2
+#     --name r-${USER} ${USER}/r:4.2.3
