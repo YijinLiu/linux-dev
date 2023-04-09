@@ -57,3 +57,4 @@ cd R-$version
 make
 sudo make install
 sudo rm -rf /opt/intel /var/intel
+cd ..
