@@ -1,14 +1,12 @@
 WORK_DIR:=$(shell readlink -f $(dir $(lastword $(MAKEFILE_LIST))))
 
-VERSION?=4.3.1
-
 default: clean
 	cd $(WORK_DIR)
 	mkdir docker_tmp_data
-	for i in ../../system/r.sh ; do \
+	for i in ../../system/*.sh ; do \
 	    cp -apf $$i docker_tmp_data/ ; \
-	    done
-	docker build -t $(USER)/r:$(VERSION) --build-arg VERSION=$(VERSION) \
+	done
+	docker build -t $(USER)/languages:`date '+%Y-%m-%d'` \
 	    --build-arg USER=$(USER) --build-arg UID=$(shell id -u) --build-arg GID=$(shell id -g) .
 
 clean:

@@ -22,7 +22,7 @@ if [ $rc != 0 ] ; then
     exit 1
 fi
 
-version=1.9.3
+version=21
 eval set -- "$OPTS"
 while true; do
     case "$1" in
@@ -32,10 +32,6 @@ while true; do
     esac
 done
 
-if [ ! -d julia ] ; then
-    git clone --depth=1 https://github.com/JuliaLang/julia -b v$version
-fi
-cd julia
-make
-sudo make prefix=/usr/local install
-cd ..
+wget https://download.oracle.com/graalvm/$version/latest/graalvm-jdk-${version}_linux-x64_bin.tar.gz
+tar xvf graalvm-jdk-${version}_linux-x64_bin.tar.gz
+cp -av graalvm-jdk-$version*/* /usr/local

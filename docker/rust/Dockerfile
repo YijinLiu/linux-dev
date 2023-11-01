@@ -1,7 +1,9 @@
-FROM ubuntu:16.04
+FROM ubuntu:22.04
 
+ENV DEBIAN_FRONTEND noninteractive
 RUN apt update && \
-    apt install -y --no-install-recommends bash build-essential dpkg git ssh sudo tzdata vim wget
+    apt install -y --no-install-recommends bash build-essential ca-certificates cmake curl dpkg \
+        git ninja-build pkg-config python3 ssh libssl-dev sudo tzdata vim wget
 
 RUN echo America/Los_Angeles > /etc/timezone
 RUN dpkg-reconfigure --frontend noninteractive tzdata
@@ -19,5 +21,5 @@ ADD docker_tmp_data/* /home/$USER/build/
 RUN chown -R $USER:$USER /home/$USER
 USER $USER
 WORKDIR /home/$USER/build
-RUN ./rust.sh --rust_ver=$VERSION
+RUN ./rust.sh --version=$VERSION
 WORKDIR /home/$USER

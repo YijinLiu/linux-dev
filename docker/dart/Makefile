@@ -1,6 +1,6 @@
 WORK_DIR:=$(shell readlink -f $(dir $(lastword $(MAKEFILE_LIST))))
 
-VERSION?=2.18.5
+VERSION?=3.1.3
 
 default: clean
 	cd $(WORK_DIR)

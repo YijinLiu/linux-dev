@@ -22,7 +22,7 @@ if [ $rc != 0 ] ; then
     exit 1
 fi
 
-version=2.18.5
+version=3.1.3
 eval set -- "$OPTS"
 while true; do
     case "$1" in
@@ -51,8 +51,8 @@ install_dart() {
         echo -e "${RED}Failed to build dart!${NC}"
         return 1
     fi
-    sudo cp -av out/ReleaseX64/dart-sdk/ /usr/local/dart-sdk_2.18.5 &&
-    sudo ln -sf /usr/local/dart-sdk_2.18.5/bin/dart /usr/local/bin/
+    sudo cp -av out/ReleaseX64/dart-sdk/ /usr/local/dart-sdk_$version &&
+    sudo ln -sf /usr/local/dart-sdk_$version/bin/dart /usr/local/bin/
     cd ../..
 }
 

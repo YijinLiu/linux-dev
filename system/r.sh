@@ -22,7 +22,7 @@ if [ $rc != 0 ] ; then
     exit 1
 fi
 
-version=4.2.3
+version=4.3.1
 eval set -- "$OPTS"
 while true; do
     case "$1" in
