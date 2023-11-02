@@ -34,4 +34,5 @@ done
 
 wget https://download.oracle.com/graalvm/$version/latest/graalvm-jdk-${version}_linux-x64_bin.tar.gz
 tar xvf graalvm-jdk-${version}_linux-x64_bin.tar.gz
-cp -av graalvm-jdk-$version*/* /usr/local
+rm -rf graalvm-jdk-$version*/man
+sudo cp -av graalvm-jdk-$version*/* /usr/local
