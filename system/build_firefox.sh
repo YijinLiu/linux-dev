@@ -22,7 +22,7 @@ if [ $rc != 0 ] ; then
     exit 1
 fi
 
-version=110.0.1
+version=121.0.1
 eval set -- "$OPTS"
 while true; do
     case "$1" in
@@ -89,13 +89,13 @@ EOD
     cd mozilla-unified/obj-x86_64-pc-linux-gnu/dist/bin
     zip -0DXqr omni.ja chrome.manifest chrome components modules
     cp -aL actors application.ini browser chrome chrome.manifest components contentaccessible \
-           crashreporter crashreporter.ini dictionaries greprefs.js hyphenation localization \
-           modules res defaults dependentlibs.list firefox fonts gmp-clearkey icons \
-           libfreeblpriv3.so libipcclientcerts.so liblgpllibs.so libmozavcodec.so libmozavutil.so \
-           libmozgtk.so libmozsandbox.so libmozsqlite3.so libmozwayland.so libnspr4.so libnss3.so \
-           libnssckbi.so libnssutil3.so libplc4.so libplds4.so libsmime3.so libsoftokn3.so \
-           libssl3.so libxul.so minidump-analyzer platform.ini plugin-container Throbber-small.gif \
-           update.locale ../../../../install/firefox
+           crashreporter crashreporter.ini dictionaries glxtest greprefs.js hyphenation \
+           localization modules res defaults dependentlibs.list firefox fonts gmp-clearkey icons \
+           libfreeblpriv3.so libgkcodecs.so libipcclientcerts.so liblgpllibs.so libmozavcodec.so \
+           libmozavutil.so libmozgtk.so libmozsandbox.so libmozsqlite3.so libmozwayland.so \
+           libnspr4.so libnss3.so libnssckbi.so libnssutil3.so libplc4.so libplds4.so libsmime3.so \
+           libsoftokn3.so libssl3.so libxul.so minidump-analyzer platform.ini plugin-container \
+           Throbber-small.gif update.locale ../../../../install/firefox
     cd ../../../../..
     tar cJvf firefox-${version}.tar.xz firefox/install/firefox
 }
